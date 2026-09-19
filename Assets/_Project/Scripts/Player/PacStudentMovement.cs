@@ -35,6 +35,11 @@ public class PacStudentMovement : MonoBehaviour
         GetInput();
 
         Move();
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            animator.SetTrigger("Die");
+        }
     }
 
     private void GetInput()
@@ -79,10 +84,16 @@ public class PacStudentMovement : MonoBehaviour
         }
 
         float currentH = animator.GetFloat("Horizontal");
+        float currentV = animator.GetFloat("Vertical");
 
         if (currentDirection.x != currentH)
         {
             animator.SetFloat("Horizontal", currentDirection.x);
+            
+        }
+        if (currentDirection.y != currentV)
+        {
+            animator.SetFloat("Vertical", currentDirection.y);
         }
 
         
