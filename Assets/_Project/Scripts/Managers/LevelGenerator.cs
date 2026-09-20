@@ -50,7 +50,7 @@ public class LevelGenerator : MonoBehaviour
 
     void Start()
     {
-       GenerateLvl(); 
+        GenerateLvl(); 
     }
 
     void GenerateLvl()
