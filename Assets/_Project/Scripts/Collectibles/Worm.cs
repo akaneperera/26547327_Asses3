@@ -1,18 +1,17 @@
 using UnityEngine;
 
-public class Pellet : MonoBehaviour
+public class Worm : MonoBehaviour
 {
-    public int score = 10;
-    public bool isPowerFood = false;
-    private void OnTriggerEnter2D(Collider2D other)
+    public int score = 100;
+
+    private void OnTriggerEnter2D(Collider2D other) // same logic as pellet
     {
-        if (other.CompareTag("PacStudent")) // if it's the pacstudent
+        if (other.CompareTag("PacStudent"))
         {
             if (AudioManager.Instance != null)
             {
-                AudioManager.Instance.PlayPelletSFX(); // play pellet sfx
+                AudioManager.Instance.PlayFoodSFX();
             }
-            // then add score
             if (ScoreManager.Instance != null)
             {
                 ScoreManager.Instance.AddScore(score);
@@ -20,8 +19,7 @@ public class Pellet : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
-   void Start()
+    void Start()
     {
         
     }
