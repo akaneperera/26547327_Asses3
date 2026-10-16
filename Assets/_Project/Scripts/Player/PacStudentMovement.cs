@@ -11,11 +11,14 @@ public class PacStudentMovement : MonoBehaviour
     private Vector2 currentDirection;
     private Vector2 inputDirection;
     private Rigidbody2D rb; // needs to be kinematic
+    private Animator animator;
+    
 
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -32,26 +35,37 @@ public class PacStudentMovement : MonoBehaviour
         GetInput();
 
         Move();
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            animator.SetTrigger("Die");
+        }
     }
 
     private void GetInput()
     {
-        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+
+        inputDirection = Vector2.zero;
+
+        
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
             inputDirection = Vector2.up;
         }
-        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+        else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
         {
             inputDirection = Vector2.left;
         }
-        if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+        else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
         {
             inputDirection = Vector2.down;
         }
-        if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
         {
             inputDirection = Vector2.right;
         }
+
+        
     }
 
     private void Move()
@@ -68,6 +82,21 @@ public class PacStudentMovement : MonoBehaviour
         {
             currentDirection = Vector2.zero;
         }
+
+        float currentH = animator.GetFloat("Horizontal");
+        float currentV = animator.GetFloat("Vertical");
+
+        if (currentDirection.x != currentH)
+        {
+            animator.SetFloat("Horizontal", currentDirection.x);
+            
+        }
+        if (currentDirection.y != currentV)
+        {
+            animator.SetFloat("Vertical", currentDirection.y);
+        }
+
+        
     }
 
     private bool CanMove(Vector2 direction)
