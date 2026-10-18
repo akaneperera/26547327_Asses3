@@ -41446,7 +41446,6 @@ GameObject:
   - component: {fileID: 1939417708}
   - component: {fileID: 1939417707}
   - component: {fileID: 1939417706}
-  - component: {fileID: 1939417705}
   - component: {fileID: 1939417710}
   - component: {fileID: 1939417711}
   m_Layer: 7
@@ -41456,19 +41455,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1939417705
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1939417704}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f79971fd36d0c413c9cf493fae7aeb0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PacStudentMovement
-  speed: 3
 --- !u!58 &1939417706
 CircleCollider2D:
   m_ObjectHideFlags: 0
