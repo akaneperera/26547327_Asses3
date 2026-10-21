@@ -12,7 +12,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip enemyNormalMusic;
     public AudioClip enemyScaredMusic;
     public AudioClip enemyDeadMusic;
-    
+
     // sfx clips
     public AudioClip moveSfx;
     public AudioClip pelletSfx;
@@ -21,6 +21,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip wallHitSfx;
     public AudioClip deathSfx;
 
+    private Coroutine introRoutine; // so the intro can be cancelled or restarted
 
     private void Awake() // makes sure there's only 1 audiomanager and also it can surive scene changes. other scripts can call it
     {
@@ -31,6 +32,8 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
+            // duplicate only appears when the level scene is loaded again.
+            Instance.IntroToEnemy();
             Destroy(gameObject);
         }
     }
@@ -54,12 +57,19 @@ public class AudioManager : MonoBehaviour
 
     public void StopMusic()
     {
+        // cancel a running intro
+        if (introRoutine != null)
+        {
+            StopCoroutine(introRoutine);
+            introRoutine = null;
+        }
         musicSource.Stop();
     }
 
     public void IntroToEnemy() // uses coroutine so that method can pause itself and wait for a condition (intro music still playing)
     {
-        StartCoroutine(Intro());
+        if (introRoutine != null) StopCoroutine(introRoutine);
+        introRoutine = StartCoroutine(Intro());
     }
 
     private System.Collections.IEnumerator Intro()
@@ -77,14 +87,16 @@ public class AudioManager : MonoBehaviour
         }
 
         PlayMusic(enemyNormalMusic, true);
+        introRoutine = null;
     }
 
     void Start()
     {
+        if (Instance != this) return; // a duplicate is about to be destroyed
         IntroToEnemy();
     }
     void Update()
     {
-        
+
     }
 }
