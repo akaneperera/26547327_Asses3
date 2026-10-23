@@ -220,7 +220,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 701425151}
-  - component: {fileID: 701425150}
+  - component: {fileID: 701425152}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -228,25 +228,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &701425150
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 701425149}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a667dd1c4fd0449c994baafeac85717e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LevelGenerator
-  wallPrefab: {fileID: 822779659461443538, guid: 07ee2dda590b043de9dd9bfa49c282f7, type: 3}
-  pelletPrefab: {fileID: 6396747924578238421, guid: 4d8466985b36b4c969aa7a8ff10e174e, type: 3}
-  powerFoodPrefab: {fileID: 6000572823651400401, guid: baf7e62a2985340279465be91f302e98, type: 3}
-  wormPrefab: {fileID: 8358530030172017149, guid: ad1a90bca8aa4448ab4e21da4312631a, type: 3}
-  wallParent: {fileID: 2069645799}
-  pelletParent: {fileID: 841378415}
-  startPos: {x: -9, y: 10}
 --- !u!4 &701425151
 Transform:
   m_ObjectHideFlags: 0
@@ -262,6 +243,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &701425152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 701425149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f88c5afd6b374d26ac97b514acbcd83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelGenerator
+  outsideCornerPrefab: {fileID: 3249836059051119150, guid: 938f1ca8172744cada7360aefa8c86f8, type: 3}
+  outsideWallPrefab: {fileID: 3040335784981083020, guid: cb625c5f9709347c2a6758d149a6285a, type: 3}
+  insideCornerPrefab: {fileID: 8077006118763556186, guid: b49727e31c51c4029916188558af11be, type: 3}
+  insideWallPrefab: {fileID: 7519223639865093210, guid: 715816347fed14c72bdf50dd840995d6, type: 3}
+  tJunctionPrefab: {fileID: 6808631353708289348, guid: 9f8b9ec595e87434e9d63db50dbd9fde, type: 3}
+  ghostExitPrefab: {fileID: 4865639986763636539, guid: 0ff6f7d14c69745188f0bb0577ad5d1c, type: 3}
+  standardPelletPrefab: {fileID: 6165597098709601915, guid: 27392034207394b9ba10f06436989187, type: 3}
+  powerPelletPrefab: {fileID: 6275297683251045515, guid: 2f940cec7ab834d15b9ab12da2b775ec, type: 3}
+  manualLevelName: Level01
+  cameraPadding: 1
 --- !u!1 &841378414
 GameObject:
   m_ObjectHideFlags: 0
@@ -371,11 +374,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e789e875bcbf4e95ac6b30c872d45f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PacStudentMovement
-  moveSpeed: 5
-  wallLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  collisionCheckDistance: 0.5
 --- !u!58 &1939417706
 CircleCollider2D:
   m_ObjectHideFlags: 0
