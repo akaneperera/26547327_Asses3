@@ -12,7 +12,7 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private GameObject standardPelletPrefab; // 5
     [SerializeField] private GameObject powerPelletPrefab;    // 6
     [SerializeField] private string manualLevelName = "Level01";
-    [SerializeField] private float cameraPadding = 1f; // extra tiles around the level
+    [SerializeField] private float cameraPadding = 1f; 
 
     private readonly int[,] levelMap =
     {
@@ -46,7 +46,7 @@ public class LevelGenerator : MonoBehaviour
     private int fullRows, fullCols; //fully completed row and col
     private int[,] map; // fully mirrored level
     private bool[,] horizontal;
-    private int[,] missing;// missing side of every T-junction 
+    private int[,] missing;// missing side of every tjunction 
 
     private void Awake()
     {
@@ -367,6 +367,9 @@ public class LevelGenerator : MonoBehaviour
         float halfWidth = fullCols / 2f + cameraPadding;
         cam.orthographicSize = Mathf.Max(halfHeight, halfWidth / cam.aspect);
     }
+
+    public int FullRows { get { return fullRows; } }
+    public int FullCols { get { return fullCols; } }
 
     //queries for other scripts
 
