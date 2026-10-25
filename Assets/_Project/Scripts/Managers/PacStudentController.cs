@@ -154,6 +154,40 @@ public class PacStudentController : MonoBehaviour
         }
     }
 
+    // methods called by gamemanager script
+    public void PlayDeath()
+    {
+        isLerping = false;
+        SetMoving(false); 
+ 
+        if (animator != null)
+        {
+            animator.speed = 1f;
+            animator.SetBool("Die", true);
+        }
+    }
+
+    public void ResetToStart()
+    {
+        isLerping = false;
+        lastInput = Direction.None;
+        currentInput = Direction.None;
+ 
+        row = 1;
+        col = 1;
+        transform.position = levelGenerator.CellToWorld(row, col);
+ 
+        if (animator != null)
+        {
+            animator.SetBool("Die", false);
+            animator.SetFloat("Horizontal", 1f); // facing right again
+            animator.SetFloat("Vertical", 0f);
+        }
+ 
+        isMoving = true;//force the stopped state
+        SetMoving(false);
+    }
+
     // Animation, dust and audio 
     private void SetMoving(bool moving)
     {

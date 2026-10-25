@@ -4,6 +4,7 @@ public class Pellet : MonoBehaviour
 {
     public int score = 10;
     public bool isPowerFood = false;
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("PacStudent")) // if it's the pacstudent
@@ -12,23 +13,22 @@ public class Pellet : MonoBehaviour
             {
                 AudioManager.Instance.PlayPelletSFX(); // play pellet sfx
             }
-            // then add score
-            if (ScoreManager.Instance != null)
+
+            // then add score and tell the game manager
+            if (GameManager.Instance != null)
             {
-                ScoreManager.Instance.AddScore(score);
+                GameManager.Instance.AddScore(score);
+
+                if (isPowerFood)
+                {
+                    GameManager.Instance.PowerPillEaten(); // ghosts become scared
+                }
+                else
+                {
+                    GameManager.Instance.PelletEaten();
+                }
             }
             Destroy(gameObject);
         }
-    }
-
-   void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

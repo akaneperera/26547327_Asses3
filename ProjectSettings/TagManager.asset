@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 3
   tags:
   - PacStudent
+  - Ghost
+  - Wall
+  - Teleporter
   layers:
   - Default
   - TransparentFX
