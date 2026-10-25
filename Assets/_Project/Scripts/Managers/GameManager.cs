@@ -11,7 +11,6 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("HUD")]
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text gameTimerText;
     [SerializeField] private TMP_Text scaredTimerText;
@@ -21,12 +20,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject[] lifeIcons;
     [SerializeField] private Button exitButton;
 
-    [Header("Characters")]
     [SerializeField] private PacStudentController pacStudent;
     [SerializeField] private GameObject[] ghosts;
 
-    [Header("Rules")]
     [SerializeField] private int startingLives = 3;
+    [SerializeField] private int pelletScore = 10;
+    [SerializeField] private int powerPillScore = 50;
     [SerializeField] private int ghostScore = 300;
     [SerializeField] private float scaredDuration = 10f;
     [SerializeField] private float recoverTime = 3f;
@@ -34,9 +33,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float gameOverDelay = 3f;
     [SerializeField] private string startSceneName = "StartScene";
 
-    // Shared state: other scripts only read these
+    //other scripts only read these
     public GameState State { get; private set; } = GameState.Countdown;
-    public GhostState CurrentGhostState { get; private set; } = GhostState.Normal;
+    public GhostState CurrentGhostState { get { return GetGlobalGhostState(); } }
     public int Score { get { return score; } }
     public int Lives { get { return lives; } }
     public int PelletsRemaining { get { return pelletsRemaining; } }
@@ -52,6 +51,7 @@ public class GameManager : MonoBehaviour
     private int ghostsDead;
 
     private Vector3[] ghostStartPositions;
+    private GhostState appliedGhostState = GhostState.Normal; //last state of the ghosts
     private Collider2D pacStudentCollider;
 
     private void Awake()
@@ -93,7 +93,6 @@ public class GameManager : MonoBehaviour
             gameTime += Time.deltaTime;
             UpdateScared();
         }
-        if (Input.GetKeyDown(KeyCode.Space)) AddScore(10); // TEMP TEST
         UpdateHud();
     }
 
@@ -105,15 +104,19 @@ public class GameManager : MonoBehaviour
 
     public void PelletEaten()
     {
+        AddScore(pelletScore);
         pelletsRemaining--;
         CheckAllPelletsEaten();
     }
 
     public void PowerPillEaten()
     {
+        AddScore(powerPillScore);
         pelletsRemaining--;
-        scaredTimeLeft = scaredDuration;
-        SetGhostState(GhostState.Scared);
+
+        scaredTimeLeft = scaredDuration; // eating another pill restarts the timer
+        ApplyGhostState(GhostState.Scared);
+
         CheckAllPelletsEaten();
     }
 
@@ -124,7 +127,6 @@ public class GameManager : MonoBehaviour
         UpdateMusic();
     }
 
-    // Call when a dead ghost is back in the ghost house
     public void GhostRevived()
     {
         ghostsDead = Mathf.Max(0, ghostsDead - 1);
@@ -141,7 +143,6 @@ public class GameManager : MonoBehaviour
         StartCoroutine(DeathRoutine());
     }
 
-
     private void CheckAllPelletsEaten()
     {
         if (pelletsRemaining <= 0 && State == GameState.Playing)
@@ -150,26 +151,29 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public GhostState GetGlobalGhostState()
+    {
+        if (scaredTimeLeft <= 0f) return GhostState.Normal;
+        if (scaredTimeLeft <= recoverTime) return GhostState.Recovering;
+        return GhostState.Scared;
+    }
+
     private void UpdateScared()
     {
-        if (CurrentGhostState == GhostState.Normal) return;
+        if (scaredTimeLeft <= 0f) return;
 
-        scaredTimeLeft -= Time.deltaTime;
+        scaredTimeLeft = Mathf.Max(0f, scaredTimeLeft - Time.deltaTime);
 
-        if (scaredTimeLeft <= 0f)
+        GhostState now = GetGlobalGhostState();
+        if (now != appliedGhostState)
         {
-            scaredTimeLeft = 0f;
-            SetGhostState(GhostState.Normal);
-        }
-        else if (scaredTimeLeft <= recoverTime && CurrentGhostState == GhostState.Scared)
-        {
-            SetGhostState(GhostState.Recovering);
+            ApplyGhostState(now);
         }
     }
 
-    private void SetGhostState(GhostState newState)
+    private void ApplyGhostState(GhostState newState)
     {
-        CurrentGhostState = newState;
+        appliedGhostState = newState; //every ghost that is not dead, call ghost.SetState(newState)
         UpdateMusic();
     }
 
@@ -194,7 +198,6 @@ public class GameManager : MonoBehaviour
             if (lifeIcons[i] != null) lifeIcons[i].SetActive(i < lives);
         }
 
-        // scared timer: empty when it isn't running
         if (scaredTimerText != null)
         {
             scaredTimerText.text = scaredTimeLeft > 0f
@@ -216,7 +219,7 @@ public class GameManager : MonoBehaviour
         State = GameState.Countdown;
         SetPacStudentCollider(false);
 
-        // 1. overlay and (empty) countdown text
+        // empty countdown text and play music
         if (blockingImage != null) blockingImage.gameObject.SetActive(true);
         if (countdownText != null)
         {
@@ -224,25 +227,25 @@ public class GameManager : MonoBehaviour
             countdownText.gameObject.SetActive(true);
         }
 
-        // intro music plays while the countdown runs
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayMusic(AudioManager.Instance.introMusic, false);
         }
-
         yield return null;
         pelletsRemaining = FindObjectsByType<Pellet>().Length;
 
+        //321
         for (int i = 3; i >= 1; i--)
         {
             if (countdownText != null) countdownText.text = i.ToString();
             yield return new WaitForSeconds(1f);
         }
 
+        //
         if (countdownText != null) countdownText.text = "GO!";
         yield return new WaitForSeconds(1f);
 
-        //hide everything then start playing
+        //hide everything
         if (countdownText != null) countdownText.gameObject.SetActive(false);
         if (blockingImage != null) blockingImage.gameObject.SetActive(false);
 
@@ -285,17 +288,15 @@ public class GameManager : MonoBehaviour
 
         ghostsDead = 0;
         scaredTimeLeft = 0f;
-        SetGhostState(GhostState.Normal);
+        ApplyGhostState(GhostState.Normal);
     }
 
     private IEnumerator GameOverRoutine()
     {
         State = GameState.GameOver;
-        if (exitButton != null) exitButton.interactable = false;
+        if (exitButton != null) exitButton.interactable = false; // the blocking image stops clicks 
         if (blockingImage != null) blockingImage.gameObject.SetActive(true);
         if (gameOverText != null) gameOverText.gameObject.SetActive(true);
-
-        //save the high score and best time with PlayerPrefs here
 
         yield return new WaitForSeconds(gameOverDelay);
         SceneManager.LoadScene(startSceneName);
