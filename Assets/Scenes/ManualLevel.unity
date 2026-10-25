@@ -4287,7 +4287,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  exitButton: {fileID: 1712103656}
+  exitButton: {fileID: 0}
   pacStudent: {fileID: 1939417712}
   ghosts:
   - {fileID: 857964114}

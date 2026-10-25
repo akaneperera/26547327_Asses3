@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float gameOverDelay = 3f;
     [SerializeField] private string startSceneName = "StartScene";
 
-    //other scripts only read these
+    // Shared state: other scripts only read these
     public GameState State { get; private set; } = GameState.Countdown;
     public GhostState CurrentGhostState { get; private set; } = GhostState.Normal;
     public int Score { get { return score; } }
@@ -61,7 +61,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        Instance = this; //references this scene's HUD
+        Instance = this;
     }
 
     private void OnDestroy()
@@ -72,11 +72,6 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         lives = startingLives;
-        foreach (GameObject icon in lifeIcons)
-        {
-            if (icon != null) icon.SetActive(true);
-        }
-
         ghostStartPositions = new Vector3[ghosts.Length];
         for (int i = 0; i < ghosts.Length; i++)
         {
@@ -98,10 +93,11 @@ public class GameManager : MonoBehaviour
             gameTime += Time.deltaTime;
             UpdateScared();
         }
+        if (Input.GetKeyDown(KeyCode.Space)) AddScore(10); // TEMP TEST
         UpdateHud();
     }
 
-    // public methods other scripts call
+    // Public methods other scripts call
     public void AddScore(int points)
     {
         score += points;
@@ -142,13 +138,9 @@ public class GameManager : MonoBehaviour
         State = GameState.Dying;
         lives--;
 
-        if (lives >= 0 && lives < lifeIcons.Length && lifeIcons[lives] != null)
-        {
-            lifeIcons[lives].SetActive(false);
-        }
-
         StartCoroutine(DeathRoutine());
     }
+
 
     private void CheckAllPelletsEaten()
     {
@@ -196,11 +188,18 @@ public class GameManager : MonoBehaviour
         if (scoreText != null) scoreText.text = score.ToString("D6");
         if (gameTimerText != null) gameTimerText.text = FormatTime(gameTime);
 
+        // one icon per remaining life
+        for (int i = 0; i < lifeIcons.Length; i++)
+        {
+            if (lifeIcons[i] != null) lifeIcons[i].SetActive(i < lives);
+        }
+
+        // scared timer: empty when it isn't running
         if (scaredTimerText != null)
         {
-            bool show = CurrentGhostState != GhostState.Normal;
-            scaredTimerText.gameObject.SetActive(show);
-            if (show) scaredTimerText.text = Mathf.CeilToInt(scaredTimeLeft).ToString();
+            scaredTimerText.text = scaredTimeLeft > 0f
+                ? Mathf.CeilToInt(scaredTimeLeft).ToString()
+                : "";
         }
     }
 
@@ -209,7 +208,7 @@ public class GameManager : MonoBehaviour
         int minutes = (int)(t / 60f);
         int seconds = (int)(t % 60f);
         int centiseconds = (int)((t * 100f) % 100f);
-        return minutes.ToString("00") + ":" + seconds.ToString("00") + ":" + centiseconds.ToString("00");
+        return minutes.ToString("D2") + ":" + seconds.ToString("D2") + ":" + centiseconds.ToString("D2");
     }
 
     private IEnumerator CountdownRoutine()
@@ -217,7 +216,7 @@ public class GameManager : MonoBehaviour
         State = GameState.Countdown;
         SetPacStudentCollider(false);
 
-        //overlay and empty countdown text
+        // 1. overlay and (empty) countdown text
         if (blockingImage != null) blockingImage.gameObject.SetActive(true);
         if (countdownText != null)
         {
@@ -225,12 +224,12 @@ public class GameManager : MonoBehaviour
             countdownText.gameObject.SetActive(true);
         }
 
+        // intro music plays while the countdown runs
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayMusic(AudioManager.Instance.introMusic, false);
         }
 
-        // Wait one frame so Level01 is gone then count the pellets
         yield return null;
         pelletsRemaining = FindObjectsByType<Pellet>().Length;
 
@@ -243,6 +242,7 @@ public class GameManager : MonoBehaviour
         if (countdownText != null) countdownText.text = "GO!";
         yield return new WaitForSeconds(1f);
 
+        //hide everything then start playing
         if (countdownText != null) countdownText.gameObject.SetActive(false);
         if (blockingImage != null) blockingImage.gameObject.SetActive(false);
 
@@ -291,10 +291,11 @@ public class GameManager : MonoBehaviour
     private IEnumerator GameOverRoutine()
     {
         State = GameState.GameOver;
-        if (exitButton != null) exitButton.interactable = false; // the blocking image catches clicks too
+        if (exitButton != null) exitButton.interactable = false;
         if (blockingImage != null) blockingImage.gameObject.SetActive(true);
         if (gameOverText != null) gameOverText.gameObject.SetActive(true);
 
+        //save the high score and best time with PlayerPrefs here
 
         yield return new WaitForSeconds(gameOverDelay);
         SceneManager.LoadScene(startSceneName);
