@@ -5,7 +5,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public enum GameState { Countdown, Playing, Dying, GameOver }
-public enum GhostState { Normal, Scared, Recovering }
 
 public class GameManager : MonoBehaviour
 {
@@ -21,7 +20,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Button exitButton;
 
     [SerializeField] private PacStudentController pacStudent;
-    [SerializeField] private GameObject[] ghosts;
+    [SerializeField] private Ghostcontroller[] ghosts;
 
     [SerializeField] private int startingLives = 3;
     [SerializeField] private int pelletScore = 10;
@@ -50,7 +49,6 @@ public class GameManager : MonoBehaviour
     private float scaredTimeLeft;
     private int ghostsDead;
 
-    private Vector3[] ghostStartPositions;
     private GhostState appliedGhostState = GhostState.Normal; //last state of the ghosts
     private Collider2D pacStudentCollider;
 
@@ -72,12 +70,6 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         lives = startingLives;
-        ghostStartPositions = new Vector3[ghosts.Length];
-        for (int i = 0; i < ghosts.Length; i++)
-        {
-            if (ghosts[i] != null) ghostStartPositions[i] = ghosts[i].transform.position;
-        }
-
         if (pacStudent != null) pacStudentCollider = pacStudent.GetComponent<Collider2D>();
 
         if (gameOverText != null) gameOverText.gameObject.SetActive(false);
@@ -174,6 +166,10 @@ public class GameManager : MonoBehaviour
     private void ApplyGhostState(GhostState newState)
     {
         appliedGhostState = newState; //every ghost that is not dead, call ghost.SetState(newState)
+        foreach (Ghostcontroller ghost in ghosts)
+        {
+            if (ghost != null && ghost.State != GhostState.Dead) ghost.SetState(newState);
+        }
         UpdateMusic();
     }
 
@@ -281,9 +277,9 @@ public class GameManager : MonoBehaviour
     {
         if (pacStudent != null) pacStudent.ResetToStart();
 
-        for (int i = 0; i < ghosts.Length; i++)
+        foreach (Ghostcontroller ghost in ghosts)
         {
-            if (ghosts[i] != null) ghosts[i].transform.position = ghostStartPositions[i];
+            if (ghost != null) ghost.ResetToStart();
         }
 
         ghostsDead = 0;

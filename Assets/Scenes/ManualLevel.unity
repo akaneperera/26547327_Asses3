@@ -1164,6 +1164,7 @@ GameObject:
   - component: {fileID: 26646052}
   - component: {fileID: 26646051}
   - component: {fileID: 26646054}
+  - component: {fileID: 26646055}
   m_Layer: 8
   m_Name: Shark3
   m_TagString: Ghost
@@ -1304,6 +1305,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.4
+--- !u!114 &26646055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 26646050}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88e4badebf10e4112aafb3a838c193f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ghostcontroller
 --- !u!1001 &28764091
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4290,11 +4303,13 @@ MonoBehaviour:
   exitButton: {fileID: 0}
   pacStudent: {fileID: 1939417712}
   ghosts:
-  - {fileID: 857964114}
-  - {fileID: 470267102}
-  - {fileID: 26646050}
-  - {fileID: 220006927}
+  - {fileID: 857964119}
+  - {fileID: 470267107}
+  - {fileID: 26646055}
+  - {fileID: 220006932}
   startingLives: 3
+  pelletScore: 10
+  powerPillScore: 50
   ghostScore: 300
   scaredDuration: 10
   recoverTime: 3
@@ -5156,6 +5171,7 @@ GameObject:
   - component: {fileID: 220006929}
   - component: {fileID: 220006928}
   - component: {fileID: 220006931}
+  - component: {fileID: 220006932}
   m_Layer: 8
   m_Name: Shark4
   m_TagString: Ghost
@@ -5296,6 +5312,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.4
+--- !u!114 &220006932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 220006927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88e4badebf10e4112aafb3a838c193f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ghostcontroller
 --- !u!1001 &222271520
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16152,6 +16180,7 @@ GameObject:
   - component: {fileID: 470267104}
   - component: {fileID: 470267103}
   - component: {fileID: 470267106}
+  - component: {fileID: 470267107}
   m_Layer: 8
   m_Name: Shark2
   m_TagString: Ghost
@@ -16292,6 +16321,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.4
+--- !u!114 &470267107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 470267102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88e4badebf10e4112aafb3a838c193f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ghostcontroller
 --- !u!1001 &470383835
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24316,6 +24357,7 @@ GameObject:
   - component: {fileID: 857964116}
   - component: {fileID: 857964115}
   - component: {fileID: 857964118}
+  - component: {fileID: 857964119}
   m_Layer: 8
   m_Name: Shark1
   m_TagString: Ghost
@@ -24456,6 +24498,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.4
+--- !u!114 &857964119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 857964114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88e4badebf10e4112aafb3a838c193f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ghostcontroller
 --- !u!1001 &859945763
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25566,8 +25620,8 @@ MonoBehaviour:
   enemyNormalMusic: {fileID: 8300000, guid: dfaf56ee209be4b2b9937a0c2e68eb51, type: 3}
   enemyScaredMusic: {fileID: 8300000, guid: d6ed8bf263b8c428497ecfea8823140f, type: 3}
   enemyDeadMusic: {fileID: 8300000, guid: e602666fcb45a4a98a1057203cffbd2b, type: 3}
-  moveSfx: {fileID: 0}
-  pelletSfx: {fileID: 0}
+  moveSfx: {fileID: 8300000, guid: 4284128853de748358882d9b87622db4, type: 3}
+  pelletSfx: {fileID: 8300000, guid: 8ce77654fe1b745239d91f40f9c7a926, type: 3}
   eatEnemySfx: {fileID: 8300000, guid: 53b6ce15c1d944d7f8077344b6ae5598, type: 3}
   foodSfx: {fileID: 8300000, guid: 0c44db9cbdb754d3db21eab16aef89cf, type: 3}
   wallHitSfx: {fileID: 8300000, guid: bd17b5c3dba7e454fab681439626e455, type: 3}
