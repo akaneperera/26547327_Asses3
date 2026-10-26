@@ -14,6 +14,7 @@ public class PacStudentController : MonoBehaviour
 
     private Direction lastInput = Direction.None; 
     private Direction currentInput = Direction.None; 
+    [SerializeField] private GameObject wallHitEffect;
 
     private int row, col; // the grid cell pacstudent is currently in
     private int targetRow, targetCol; // the current lerp
@@ -26,6 +27,10 @@ public class PacStudentController : MonoBehaviour
     private float duration;
 
     private Animator animator;
+    private bool hasBumped;
+    private GameObject[] teleporters;
+    private Transform ignoredTeleporter;
+    private Transform pendingTarget; 
 
     private void Start()
     {
@@ -40,6 +45,16 @@ public class PacStudentController : MonoBehaviour
             Debug.LogError("no LevelGenerator found.");
             enabled = false;
             return;
+        }
+
+        try
+        {
+            teleporters = GameObject.FindGameObjectsWithTag("Teleporter");
+        }
+        catch (UnityException)
+        {
+            Debug.LogWarning("create a 'Teleporter' tag and tag both teleporters with it.");
+            teleporters = new GameObject[0];
         }
 
         row = 1; // start position
@@ -73,10 +88,10 @@ public class PacStudentController : MonoBehaviour
 
     private void ReadInput()
     {
-        if (Input.GetKeyDown(KeyCode.W)) lastInput = Direction.Up;
-        if (Input.GetKeyDown(KeyCode.A)) lastInput = Direction.Left;
-        if (Input.GetKeyDown(KeyCode.S)) lastInput = Direction.Down;
-        if (Input.GetKeyDown(KeyCode.D)) lastInput = Direction.Right;
+        if (Input.GetKeyDown(KeyCode.W)) { lastInput = Direction.Up; hasBumped = false; }
+        if (Input.GetKeyDown(KeyCode.A)) { lastInput = Direction.Left; hasBumped = false; }
+        if (Input.GetKeyDown(KeyCode.S)) { lastInput = Direction.Down; hasBumped = false; }
+        if (Input.GetKeyDown(KeyCode.D)) { lastInput = Direction.Right; hasBumped = false; }
     }
 
     private void UpdateLerp()
@@ -91,6 +106,11 @@ public class PacStudentController : MonoBehaviour
             row = targetRow;
             col = targetCol;
             isLerping = false;
+            if (pendingTarget != null)
+            {
+                Teleport();
+                TryStartLeg(currentInput);
+            }
         }
     }
 
@@ -109,6 +129,29 @@ public class PacStudentController : MonoBehaviour
 
         // if both blocked
         SetMoving(false);
+        TryBump();
+    }
+
+    private void TryBump()
+    {
+        if (hasBumped) return;
+
+        // the direction we were travelling, or the key pressed if we never moved
+        Direction d = currentInput != Direction.None ? currentInput : lastInput;
+        if (d == Direction.None) return;
+
+        GetDelta(d, out int dRow, out int dCol);
+        Vector3 point = transform.position + new Vector3(dCol, -dRow, 0f) * 0.5f;
+
+        if (wallHitEffect != null)
+        {
+            Instantiate(wallHitEffect, point, Quaternion.identity);
+        }
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayWallHitSFX();
+        }
+        hasBumped = true;
     }
 
     private bool TryStartLeg(Direction d)
@@ -129,6 +172,7 @@ public class PacStudentController : MonoBehaviour
         duration = 1f / speed; // one tile per leg
         startTime = Time.time;
         isLerping = true;
+        hasBumped = false;
 
         if (animator != null)
         {
@@ -139,6 +183,42 @@ public class PacStudentController : MonoBehaviour
         SetMoving(true);
         PlayMoveAudio(levelGenerator.HasPellet(nextRow, nextCol));
         return true;
+    }
+
+    private void Teleport()
+    {
+        levelGenerator.WorldToCell(pendingTarget.position, out row, out col);
+        transform.position = levelGenerator.CellToWorld(row, col);
+
+        ignoredTeleporter = pendingTarget; //arrive inside its trigger so ignore it
+        pendingTarget = null;
+    }
+
+    private Transform GetOtherTeleporter(Transform entered)
+    {
+        foreach (GameObject t in teleporters)
+        {
+            if (t.transform != entered) return t.transform;
+        }
+        return null;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!other.CompareTag("Teleporter")) return;
+        if (other.transform == ignoredTeleporter) return;
+
+        //wait until the current lerp reaches the tunnel cell
+        pendingTarget = GetOtherTeleporter(other.transform);
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        // avoid ping ponging between teleporters
+        if (other.transform == ignoredTeleporter)
+        {
+            ignoredTeleporter = null;
+        }
     }
 
     private static void GetDelta(Direction d, out int dRow, out int dCol)
@@ -172,6 +252,9 @@ public class PacStudentController : MonoBehaviour
         isLerping = false;
         lastInput = Direction.None;
         currentInput = Direction.None;
+        hasBumped = false;
+        pendingTarget = null;
+        ignoredTeleporter = null;
  
         row = 1;
         col = 1;
