@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -26,9 +27,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int pelletScore = 10;
     [SerializeField] private int powerPillScore = 50;
     [SerializeField] private int ghostScore = 300;
+    [SerializeField] private float ghostDeadDuration = 3f;
     [SerializeField] private float scaredDuration = 10f;
     [SerializeField] private float recoverTime = 3f;
-    [SerializeField] private float deathDuration = 2f;
+    [SerializeField] private float deathDuration = 4f;
     [SerializeField] private float gameOverDelay = 3f;
     [SerializeField] private string startSceneName = "StartScene";
 
@@ -50,6 +52,7 @@ public class GameManager : MonoBehaviour
     private int ghostsDead;
 
     private GhostState appliedGhostState = GhostState.Normal; //last state of the ghosts
+    private readonly Dictionary<Ghostcontroller, Coroutine> deadTimers = new Dictionary<Ghostcontroller, Coroutine>();
     private Collider2D pacStudentCollider;
 
     private void Awake()
@@ -112,6 +115,20 @@ public class GameManager : MonoBehaviour
         CheckAllPelletsEaten();
     }
 
+    public void GhostEaten(Ghostcontroller ghost)
+    {
+        if (ghost == null || ghost.State == GhostState.Dead) return;
+ 
+        ghost.SetState(GhostState.Dead);
+        AddScore(ghostScore);
+        ghostsDead++;
+ 
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayEatEnemySFX();
+        UpdateMusic();
+ 
+        StartDeadTimer(ghost);
+    }
+
     public void GhostEaten()
     {
         AddScore(ghostScore);
@@ -125,8 +142,31 @@ public class GameManager : MonoBehaviour
         UpdateMusic();
     }
 
+    private void StartDeadTimer(Ghostcontroller ghost)
+    {
+        Coroutine existing;
+        if (deadTimers.TryGetValue(ghost, out existing) && existing != null) StopCoroutine(existing);
+        deadTimers[ghost] = StartCoroutine(GhostDeadTimer(ghost));
+    }
+ 
+    private IEnumerator GhostDeadTimer(Ghostcontroller ghost)
+    {
+        yield return new WaitForSeconds(ghostDeadDuration);
+ 
+        deadTimers.Remove(ghost);
+ 
+        // Only revive if it is still dead (a reset may already have brought it back)
+        if (ghost != null && ghost.State == GhostState.Dead)
+        {
+            // back to Scared/Recovering if the timer is still running, otherwise Normal
+            ghost.SetState(GetGlobalGhostState());
+            GhostRevived();
+        }
+    }
+
     public void PlayerHit()
     {
+        Debug.Log("PlayerHit: lives before = " + lives + ", pacStudent assigned = " + (pacStudent != null));
         if (State != GameState.Playing) return;
 
         State = GameState.Dying;
@@ -273,15 +313,21 @@ public class GameManager : MonoBehaviour
         SetPacStudentCollider(true);
     }
 
-    private void ResetCharacters()
+    private void ResetCharacters() //respawn now cancels all pending dead timers
     {
         if (pacStudent != null) pacStudent.ResetToStart();
-
+ 
+        foreach (KeyValuePair<Ghostcontroller, Coroutine> timer in deadTimers)
+        {
+            if (timer.Value != null) StopCoroutine(timer.Value);
+        }
+        deadTimers.Clear();
+ 
         foreach (Ghostcontroller ghost in ghosts)
         {
             if (ghost != null) ghost.ResetToStart();
         }
-
+ 
         ghostsDead = 0;
         scaredTimeLeft = 0f;
         ApplyGhostState(GhostState.Normal);

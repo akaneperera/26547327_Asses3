@@ -30,7 +30,9 @@ public class PacStudentController : MonoBehaviour
     private bool hasBumped;
     private GameObject[] teleporters;
     private Transform ignoredTeleporter;
-    private Transform pendingTarget; 
+    private Transform pendingTarget;
+
+    private bool isDead;
 
     private void Start()
     {
@@ -73,6 +75,7 @@ public class PacStudentController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead) return;
         ReadInput();
 
         if (isLerping)
@@ -205,19 +208,37 @@ public class PacStudentController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        Debug.Log("Touched: " + other.name + " tag=" + other.tag);
+        if (other.CompareTag("Ghost"))
+        {
+            HandleGhostTouch(other);
+            return;
+        }
+ 
         if (!other.CompareTag("Teleporter")) return;
         if (other.transform == ignoredTeleporter) return;
-
-        //wait until the current lerp reaches the tunnel cell
+ 
+        // wait until current lerp reaches the tunnel cell
         pendingTarget = GetOtherTeleporter(other.transform);
     }
-
-    private void OnTriggerExit2D(Collider2D other)
+ 
+    private void HandleGhostTouch(Collider2D other)
     {
-        // avoid ping ponging between teleporters
-        if (other.transform == ignoredTeleporter)
+        if (GameManager.Instance == null || GameManager.Instance.State != GameState.Playing) return;
+ 
+        Ghostcontroller ghost = other.GetComponentInParent<Ghostcontroller>();
+        if (ghost == null) return;
+ 
+        switch (ghost.State)
         {
-            ignoredTeleporter = null;
+            case GhostState.Dead:
+                break; //dead ghost can't hurt player or be eaten
+            case GhostState.Normal:
+                GameManager.Instance.PlayerHit();
+                break;
+            default: // scared or recovering
+                GameManager.Instance.GhostEaten(ghost);
+                break;
         }
     }
 
@@ -236,16 +257,23 @@ public class PacStudentController : MonoBehaviour
 
     // methods called by gamemanager script
     public void PlayDeath()
+{
+    if (isDead) return;
+
+    isDead = true;
+    isLerping = false;
+    pendingTarget = null;
+
+    SetMoving(false);
+
+    if (animator != null)
     {
-        isLerping = false;
-        SetMoving(false); 
- 
-        if (animator != null)
-        {
-            animator.speed = 1f;
-            animator.SetBool("Die", true);
-        }
+        animator.speed = 1f;
+        animator.SetFloat("Horizontal", 0f);
+        animator.SetFloat("Vertical", 0f);
+        animator.SetBool("Die", true);
     }
+}
 
     public void ResetToStart()
     {
@@ -255,6 +283,7 @@ public class PacStudentController : MonoBehaviour
         hasBumped = false;
         pendingTarget = null;
         ignoredTeleporter = null;
+        isDead = false;
  
         row = 1;
         col = 1;
