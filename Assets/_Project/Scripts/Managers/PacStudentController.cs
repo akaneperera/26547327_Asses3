@@ -55,7 +55,6 @@ public class PacStudentController : MonoBehaviour
         }
         catch (UnityException)
         {
-            Debug.LogWarning("create a 'Teleporter' tag and tag both teleporters with it.");
             teleporters = new GameObject[0];
         }
 
@@ -76,6 +75,11 @@ public class PacStudentController : MonoBehaviour
     private void Update()
     {
         if (isDead) return;
+        if (GameManager.Instance != null && GameManager.Instance.State != GameState.Playing) //pacstudent can't move during countdown to start the game
+        {
+            SetMoving(false);
+            return;
+        }
         ReadInput();
 
         if (isLerping)
@@ -208,7 +212,6 @@ public class PacStudentController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log("Touched: " + other.name + " tag=" + other.tag);
         if (other.CompareTag("Ghost"))
         {
             HandleGhostTouch(other);
@@ -294,6 +297,7 @@ public class PacStudentController : MonoBehaviour
             animator.SetBool("Die", false);
             animator.SetFloat("Horizontal", 1f); // facing right again
             animator.SetFloat("Vertical", 0f);
+            animator.Update(0f);
         }
  
         isMoving = true;//force the stopped state

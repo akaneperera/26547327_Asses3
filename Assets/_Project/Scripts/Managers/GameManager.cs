@@ -22,6 +22,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private PacStudentController pacStudent;
     [SerializeField] private Ghostcontroller[] ghosts;
+    [SerializeField] private GameObject deathEffect;
 
     [SerializeField] private int startingLives = 3;
     [SerializeField] private int pelletScore = 10;
@@ -43,6 +44,9 @@ public class GameManager : MonoBehaviour
     public float GameTime { get { return gameTime; } }
     public float ScaredTimeLeft { get { return scaredTimeLeft; } }
     public int GhostsDead { get { return ghostsDead; } }
+
+    public const string HighScoreKey = "Level1HighScore";
+    public const string BestTimeKey = "Level1BestTime";
 
     private int score;
     private int lives;
@@ -166,7 +170,6 @@ public class GameManager : MonoBehaviour
 
     public void PlayerHit()
     {
-        Debug.Log("PlayerHit: lives before = " + lives + ", pacStudent assigned = " + (pacStudent != null));
         if (State != GameState.Playing) return;
 
         State = GameState.Dying;
@@ -297,7 +300,11 @@ public class GameManager : MonoBehaviour
     private IEnumerator DeathRoutine()
     {
         SetPacStudentCollider(false);
-        if (pacStudent != null) pacStudent.PlayDeath();
+        if (pacStudent != null)
+        {
+            pacStudent.PlayDeath();
+            if (deathEffect != null) Instantiate(deathEffect, pacStudent.transform.position, Quaternion.identity);
+        }
         if (AudioManager.Instance != null) AudioManager.Instance.PlayDeathSFX();
 
         yield return new WaitForSeconds(deathDuration);
@@ -335,13 +342,35 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator GameOverRoutine()
     {
+        if (State == GameState.GameOver) yield break;
+ 
+        // check for Playing state
         State = GameState.GameOver;
-        if (exitButton != null) exitButton.interactable = false; // the blocking image stops clicks 
+ 
+        if (exitButton != null) exitButton.interactable = false; // blocking image stops clicks 
         if (blockingImage != null) blockingImage.gameObject.SetActive(true);
         if (gameOverText != null) gameOverText.gameObject.SetActive(true);
-
+ 
+        SaveHighScore();
+ 
         yield return new WaitForSeconds(gameOverDelay);
         SceneManager.LoadScene(startSceneName);
+    }
+
+        private void SaveHighScore()
+    {
+        int storedScore = PlayerPrefs.GetInt(HighScoreKey, 0);
+        float storedTime = PlayerPrefs.GetFloat(BestTimeKey, float.MaxValue);
+
+        bool higherScore = score > storedScore;
+        bool sameScoreFaster = score == storedScore && gameTime < storedTime;
+
+        if (higherScore || sameScoreFaster)
+        {
+            PlayerPrefs.SetInt(HighScoreKey, score);
+            PlayerPrefs.SetFloat(BestTimeKey, gameTime);
+            PlayerPrefs.Save();
+        }
     }
 
     private void SetPacStudentCollider(bool on)

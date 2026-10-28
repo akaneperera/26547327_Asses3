@@ -635,6 +635,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StartMenu
   level1Button: {fileID: 1135873506}
   level2Button: {fileID: 79011419}
+  level1ScoreText: {fileID: 1896138988}
+  level2ScoreText: {fileID: 339508564}
   level1SceneName: ManualLevel
   menuMusic: {fileID: 1110286145}
 --- !u!4 &364705514
