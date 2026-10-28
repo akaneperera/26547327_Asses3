@@ -14,6 +14,7 @@ public class PacStudentController : MonoBehaviour
 
     private Direction lastInput = Direction.None; 
     private Direction currentInput = Direction.None; 
+    [SerializeField] private GameObject wallHitEffect;
 
     private int row, col; // the grid cell pacstudent is currently in
     private int targetRow, targetCol; // the current lerp
@@ -26,6 +27,12 @@ public class PacStudentController : MonoBehaviour
     private float duration;
 
     private Animator animator;
+    private bool hasBumped;
+    private GameObject[] teleporters;
+    private Transform ignoredTeleporter;
+    private Transform pendingTarget;
+
+    private bool isDead;
 
     private void Start()
     {
@@ -40,6 +47,15 @@ public class PacStudentController : MonoBehaviour
             Debug.LogError("no LevelGenerator found.");
             enabled = false;
             return;
+        }
+
+        try
+        {
+            teleporters = GameObject.FindGameObjectsWithTag("Teleporter");
+        }
+        catch (UnityException)
+        {
+            teleporters = new GameObject[0];
         }
 
         row = 1; // start position
@@ -58,6 +74,12 @@ public class PacStudentController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead) return;
+        if (GameManager.Instance != null && GameManager.Instance.State != GameState.Playing) //pacstudent can't move during countdown to start the game
+        {
+            SetMoving(false);
+            return;
+        }
         ReadInput();
 
         if (isLerping)
@@ -73,10 +95,10 @@ public class PacStudentController : MonoBehaviour
 
     private void ReadInput()
     {
-        if (Input.GetKeyDown(KeyCode.W)) lastInput = Direction.Up;
-        if (Input.GetKeyDown(KeyCode.A)) lastInput = Direction.Left;
-        if (Input.GetKeyDown(KeyCode.S)) lastInput = Direction.Down;
-        if (Input.GetKeyDown(KeyCode.D)) lastInput = Direction.Right;
+        if (Input.GetKeyDown(KeyCode.W)) { lastInput = Direction.Up; hasBumped = false; }
+        if (Input.GetKeyDown(KeyCode.A)) { lastInput = Direction.Left; hasBumped = false; }
+        if (Input.GetKeyDown(KeyCode.S)) { lastInput = Direction.Down; hasBumped = false; }
+        if (Input.GetKeyDown(KeyCode.D)) { lastInput = Direction.Right; hasBumped = false; }
     }
 
     private void UpdateLerp()
@@ -91,6 +113,11 @@ public class PacStudentController : MonoBehaviour
             row = targetRow;
             col = targetCol;
             isLerping = false;
+            if (pendingTarget != null)
+            {
+                Teleport();
+                TryStartLeg(currentInput);
+            }
         }
     }
 
@@ -109,6 +136,29 @@ public class PacStudentController : MonoBehaviour
 
         // if both blocked
         SetMoving(false);
+        TryBump();
+    }
+
+    private void TryBump()
+    {
+        if (hasBumped) return;
+
+        // the direction we were travelling, or the key pressed if we never moved
+        Direction d = currentInput != Direction.None ? currentInput : lastInput;
+        if (d == Direction.None) return;
+
+        GetDelta(d, out int dRow, out int dCol);
+        Vector3 point = transform.position + new Vector3(dCol, -dRow, 0f) * 0.5f;
+
+        if (wallHitEffect != null)
+        {
+            Instantiate(wallHitEffect, point, Quaternion.identity);
+        }
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayWallHitSFX();
+        }
+        hasBumped = true;
     }
 
     private bool TryStartLeg(Direction d)
@@ -129,6 +179,7 @@ public class PacStudentController : MonoBehaviour
         duration = 1f / speed; // one tile per leg
         startTime = Time.time;
         isLerping = true;
+        hasBumped = false;
 
         if (animator != null)
         {
@@ -139,6 +190,59 @@ public class PacStudentController : MonoBehaviour
         SetMoving(true);
         PlayMoveAudio(levelGenerator.HasPellet(nextRow, nextCol));
         return true;
+    }
+
+    private void Teleport()
+    {
+        levelGenerator.WorldToCell(pendingTarget.position, out row, out col);
+        transform.position = levelGenerator.CellToWorld(row, col);
+
+        ignoredTeleporter = pendingTarget; //arrive inside its trigger so ignore it
+        pendingTarget = null;
+    }
+
+    private Transform GetOtherTeleporter(Transform entered)
+    {
+        foreach (GameObject t in teleporters)
+        {
+            if (t.transform != entered) return t.transform;
+        }
+        return null;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Ghost"))
+        {
+            HandleGhostTouch(other);
+            return;
+        }
+ 
+        if (!other.CompareTag("Teleporter")) return;
+        if (other.transform == ignoredTeleporter) return;
+ 
+        // wait until current lerp reaches the tunnel cell
+        pendingTarget = GetOtherTeleporter(other.transform);
+    }
+ 
+    private void HandleGhostTouch(Collider2D other)
+    {
+        if (GameManager.Instance == null || GameManager.Instance.State != GameState.Playing) return;
+ 
+        Ghostcontroller ghost = other.GetComponentInParent<Ghostcontroller>();
+        if (ghost == null) return;
+ 
+        switch (ghost.State)
+        {
+            case GhostState.Dead:
+                break; //dead ghost can't hurt player or be eaten
+            case GhostState.Normal:
+                GameManager.Instance.PlayerHit();
+                break;
+            default: // scared or recovering
+                GameManager.Instance.GhostEaten(ghost);
+                break;
+        }
     }
 
     private static void GetDelta(Direction d, out int dRow, out int dCol)
@@ -152,6 +256,52 @@ public class PacStudentController : MonoBehaviour
             case Direction.Left: dCol = -1; break;
             case Direction.Right: dCol = 1; break;
         }
+    }
+
+    // methods called by gamemanager script
+    public void PlayDeath()
+{
+    if (isDead) return;
+
+    isDead = true;
+    isLerping = false;
+    pendingTarget = null;
+
+    SetMoving(false);
+
+    if (animator != null)
+    {
+        animator.speed = 1f;
+        animator.SetFloat("Horizontal", 0f);
+        animator.SetFloat("Vertical", 0f);
+        animator.SetBool("Die", true);
+    }
+}
+
+    public void ResetToStart()
+    {
+        isLerping = false;
+        lastInput = Direction.None;
+        currentInput = Direction.None;
+        hasBumped = false;
+        pendingTarget = null;
+        ignoredTeleporter = null;
+        isDead = false;
+ 
+        row = 1;
+        col = 1;
+        transform.position = levelGenerator.CellToWorld(row, col);
+ 
+        if (animator != null)
+        {
+            animator.SetBool("Die", false);
+            animator.SetFloat("Horizontal", 1f); // facing right again
+            animator.SetFloat("Vertical", 0f);
+            animator.Update(0f);
+        }
+ 
+        isMoving = true;//force the stopped state
+        SetMoving(false);
     }
 
     // Animation, dust and audio 

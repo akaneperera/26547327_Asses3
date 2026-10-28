@@ -23,7 +23,7 @@ public class AudioManager : MonoBehaviour
 
     private Coroutine introRoutine; // so the intro can be cancelled or restarted
 
-    private void Awake() // makes sure there's only 1 audiomanager and also it can surive scene changes. other scripts can call it
+    private void Awake()
     {
         if (Instance == null)
         {
@@ -32,8 +32,6 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            // duplicate only appears when the level scene is loaded again.
-            Instance.IntroToEnemy();
             Destroy(gameObject);
         }
     }
@@ -57,7 +55,7 @@ public class AudioManager : MonoBehaviour
 
     public void StopMusic()
     {
-        // cancel a running intro
+        // cancel a running intro otherwise it would start the enemy music as soon as the intro source stops
         if (introRoutine != null)
         {
             StopCoroutine(introRoutine);
@@ -66,7 +64,7 @@ public class AudioManager : MonoBehaviour
         musicSource.Stop();
     }
 
-    public void IntroToEnemy() // uses coroutine so that method can pause itself and wait for a condition (intro music still playing)
+    public void IntroToEnemy() // uses coroutine so that method can pause itself and wait for a condition
     {
         if (introRoutine != null) StopCoroutine(introRoutine);
         introRoutine = StartCoroutine(Intro());
@@ -90,11 +88,6 @@ public class AudioManager : MonoBehaviour
         introRoutine = null;
     }
 
-    void Start()
-    {
-        if (Instance != this) return; // a duplicate is about to be destroyed
-        IntroToEnemy();
-    }
     void Update()
     {
 
