@@ -12,21 +12,11 @@ public class Worm : MonoBehaviour
             {
                 AudioManager.Instance.PlayFoodSFX();
             }
-            if (ScoreManager.Instance != null)
+            if (GameManager.Instance != null)
             {
-                ScoreManager.Instance.AddScore(score);
+                GameManager.Instance.AddScore(score);
             }
             Destroy(gameObject);
         }
-    }
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

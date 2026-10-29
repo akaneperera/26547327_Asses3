@@ -12,7 +12,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip enemyNormalMusic;
     public AudioClip enemyScaredMusic;
     public AudioClip enemyDeadMusic;
-    
+
     // sfx clips
     public AudioClip moveSfx;
     public AudioClip pelletSfx;
@@ -21,8 +21,9 @@ public class AudioManager : MonoBehaviour
     public AudioClip wallHitSfx;
     public AudioClip deathSfx;
 
+    private Coroutine introRoutine; // so the intro can be cancelled or restarted
 
-    private void Awake() // makes sure there's only 1 audiomanager and also it can surive scene changes. other scripts can call it
+    private void Awake()
     {
         if (Instance == null)
         {
@@ -54,12 +55,19 @@ public class AudioManager : MonoBehaviour
 
     public void StopMusic()
     {
+        // cancel a running intro otherwise it would start the enemy music as soon as the intro source stops
+        if (introRoutine != null)
+        {
+            StopCoroutine(introRoutine);
+            introRoutine = null;
+        }
         musicSource.Stop();
     }
 
-    public void IntroToEnemy() // uses coroutine so that method can pause itself and wait for a condition (intro music still playing)
+    public void IntroToEnemy() // uses coroutine so that method can pause itself and wait for a condition
     {
-        StartCoroutine(Intro());
+        if (introRoutine != null) StopCoroutine(introRoutine);
+        introRoutine = StartCoroutine(Intro());
     }
 
     private System.Collections.IEnumerator Intro()
@@ -77,14 +85,11 @@ public class AudioManager : MonoBehaviour
         }
 
         PlayMusic(enemyNormalMusic, true);
+        introRoutine = null;
     }
 
-    void Start()
-    {
-        IntroToEnemy();
-    }
     void Update()
     {
-        
+
     }
 }
