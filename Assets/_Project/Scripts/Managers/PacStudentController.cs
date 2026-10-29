@@ -34,6 +34,8 @@ public class PacStudentController : MonoBehaviour
 
     private bool isDead;
 
+    public float Speed { get { return speed; } }
+
     private void Start()
     {
         animator = GetComponent<Animator>();
@@ -58,7 +60,7 @@ public class PacStudentController : MonoBehaviour
             teleporters = new GameObject[0];
         }
 
-        row = 1; // start position
+        row = 1;
         col = 1;
         transform.position = levelGenerator.CellToWorld(row, col);
 
@@ -103,13 +105,12 @@ public class PacStudentController : MonoBehaviour
 
     private void UpdateLerp()
     {
-        // elapsed time / duration, capped at 1
         float t = Mathf.Clamp01((Time.time - startTime) / duration);
         transform.position = Vector3.Lerp(startPos, endPos, t);
 
         if (t >= 1f)
         {
-            transform.position = endPos; // snap to grid
+            transform.position = endPos; //snap to grid
             row = targetRow;
             col = targetCol;
             isLerping = false;
@@ -143,7 +144,7 @@ public class PacStudentController : MonoBehaviour
     {
         if (hasBumped) return;
 
-        // the direction we were travelling, or the key pressed if we never moved
+        // the direction we were travelling or the key pressed if we never moved
         Direction d = currentInput != Direction.None ? currentInput : lastInput;
         if (d == Direction.None) return;
 

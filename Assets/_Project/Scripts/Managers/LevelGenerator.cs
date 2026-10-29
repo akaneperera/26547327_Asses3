@@ -44,7 +44,7 @@ public class LevelGenerator : MonoBehaviour
     private const int DefaultTMissingSide = Down;
     
     private int fullRows, fullCols; //fully completed row and col
-    private int[,] map; // fully mirrored level
+    private int[,] map;
     private bool[,] horizontal;
     private int[,] missing;// missing side of every tjunction 
 
@@ -142,7 +142,7 @@ public class LevelGenerator : MonoBehaviour
         return best;
     }
 
-    // does  straight piece at (r, c) run along the direction of side?
+    // does straight piece at (r, c) run along the direction of side
     private bool StraightRunsAlong(int r, int c, int side)
     {
         bool sideIsHorizontal = (side == Left || side == Right);
@@ -164,7 +164,7 @@ public class LevelGenerator : MonoBehaviour
 
                 if (left && right) horizontal[r, c] = true;
                 else if (up && down) horizontal[r, c] = false;
-                else if (left || right) horizontal[r, c] = true;   // dead end
+                else if (left || right) horizontal[r, c] = true; // dead end
                 else if (up || down) horizontal[r, c] = false;
                 else horizontal[r, c] = true;
             }
@@ -280,9 +280,9 @@ public class LevelGenerator : MonoBehaviour
         int tB = TileAtSide(r, c, sideB);
 
         int band;
-        if (tA == -1) band = sideA;              // out of bounds: band goes there
+        if (tA == -1) band = sideA; // out of bounds: band goes there
         else if (tB == -1) band = sideB;
-        else if (IsPelletTile(tA)) band = sideB;   // pellet on one side: band on the other
+        else if (IsPelletTile(tA)) band = sideB;// pellet on one side: band on the other
         else if (IsPelletTile(tB)) band = sideA;
         else
         {
@@ -303,7 +303,7 @@ public class LevelGenerator : MonoBehaviour
             for (int c = 0; c < fullCols; c++)
             {
                 int type = map[r, c];
-                if (type == 0) continue; // empty: place nothing
+                if (type == 0) continue; // place nothing
 
                 GameObject prefab = null;
                 int steps = 0;
@@ -393,5 +393,30 @@ public class LevelGenerator : MonoBehaviour
     {
         col = Mathf.RoundToInt(world.x);
         row = Mathf.RoundToInt(-world.y);
+    }
+
+    public bool IsGhostWalkable(int row, int col, bool canUseExit)
+    {
+        int t = TileAt(row, col);
+        if (t == 0 || t == 5 || t == 6) return true;
+        return canUseExit && t == 8;
+    }
+
+    public bool IsExitWall(int row, int col)
+    {
+        return TileAt(row, col) == 8;
+    }
+
+    public List<Vector2Int> GetExitWallCells() // scans map for exit cells
+    {
+        List<Vector2Int> cells = new List<Vector2Int>(); // x is the row and y is the column
+        for (int r = 0; r < fullRows; r++)
+        {
+            for (int c = 0; c < fullCols; c++)
+            {
+                if (map[r, c] == 8) cells.Add(new Vector2Int(r, c));
+            }
+        }
+        return cells; // should return rows 12 and 16 and columns 13 and 14
     }
 }

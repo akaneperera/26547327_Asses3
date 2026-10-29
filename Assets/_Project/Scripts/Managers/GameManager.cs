@@ -280,7 +280,6 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
 
-        //
         if (countdownText != null) countdownText.text = "GO!";
         yield return new WaitForSeconds(1f);
 
